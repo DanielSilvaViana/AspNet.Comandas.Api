@@ -1,4 +1,13 @@
+using Comandas.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+//Adicionar o contexto do banco de dados, no caso SqlServer
+
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer("Comandadb"));
+
+
 
 // Add services to the container.
 

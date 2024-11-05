@@ -1,0 +1,25 @@
+version: '3.4'
+
+services:
+  comandas.api:
+    image: ${DOCKER_REGISTRY-}comandasapi
+    build:
+      context: Comandas.Api
+      dockerfile: Dockerfile
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:latest
+    environment:  
+     MSSQL_DATABASE: comandas
+     MSSQL_USER: usuario
+     MSSQL_PASSWORD: senhaSegura!123
+     MSSQL_PID: "Express"
+     ACCEPT_EULA: "Y"
+     SA_PASSWORD: "senhaDoSA!123"
+    volumes:
+      - comandas_db_data:/var/opt/mssql
+    ports:
+     - "1433:1433"
+volumes:
+   comandas_db_data:
+ 
+ 
