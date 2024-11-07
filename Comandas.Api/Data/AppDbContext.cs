@@ -17,6 +17,7 @@ namespace Comandas.Api.Data
         public DbSet<PedidoCozinhaItem> PedidoCozinhaItem { get; set; }
 
         public DbSet<Mesa> Mesa { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -44,19 +45,20 @@ namespace Comandas.Api.Data
             modelBuilder.Entity<PedidoCozinha>()
                 .HasMany<PedidoCozinhaItem>()
                 .WithOne(ci => ci.PedidoCozinha)
-                .HasForeignKey(f => f.PedidoCozinhaId);
+                .HasForeignKey(f => f.PedidoCozinhaId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<PedidoCozinhaItem>()
                 .HasOne(ci => ci.PedidoCozinha)
-                .WithMany(ci => ci.PedidoCozinhaItem)
-                .HasForeignKey(f => f.PedidoCozinhaId);
+                .WithMany(ci => ci.PedidoCozinhaItens)
+                .HasForeignKey(f => f.PedidoCozinhaId)
+                .OnDelete(DeleteBehavior.NoAction);
 
-            // O Item da comanda possui um Item de Cardápio
-            // E sua chave extrangeira é CardapioItemId
-           // modelBuilder.Entity<Mesa>()
-           //.HasMany<Mesa>()
-           //.WithOne(ci => ci.SituacaoMesa)
-           //.HasForeignKey(f => f.ComandaId);
+
+            modelBuilder.Entity<PedidoCozinhaItem>()
+                 .HasOne(ci => ci.ComandaItem)
+                 .WithMany()
+                 .HasForeignKey(ci => ci.ComandaItemId);
 
 
 

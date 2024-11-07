@@ -11,7 +11,7 @@ namespace Comandas.Api.Models
         public int ComandaId { get; set; }
         public virtual Comanda Comanda { get; set; }
         public int SituacaoId{ get; set; } = 1;
-        public virtual ICollection<PedidoCozinhaItem> PedidoCozinhaItem { get; set; }
+        public virtual ICollection<PedidoCozinhaItem> PedidoCozinhaItens { get; set; }
     }
 
     public class PedidoCozinhaItem
