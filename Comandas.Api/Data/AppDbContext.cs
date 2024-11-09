@@ -12,11 +12,11 @@ namespace Comandas.Api.Data
 
         public DbSet<ComandaItem> ComandaItems { get; set; }
 
-        public DbSet<PedidoCozinha> PedidoCozinha { get; set; }
+        public DbSet<PedidoCozinha> PedidoCozinhas { get; set; }
 
-        public DbSet<PedidoCozinhaItem> PedidoCozinhaItem { get; set; }
+        public DbSet<PedidoCozinhaItem> PedidoCozinhaItems { get; set; }
 
-        public DbSet<Mesa> Mesa { get; set; }
+        public DbSet<Mesa> Mesas { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
 
 

@@ -25,14 +25,14 @@ namespace Comandas.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Mesa>>> GetMesa()
         {
-            return await _context.Mesa.ToListAsync();
+            return await _context.Mesas.ToListAsync();
         }
 
         // GET: api/Mesas/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Mesa>> GetMesa(int id)
         {
-            var mesa = await _context.Mesa.FindAsync(id);
+            var mesa = await _context.Mesas.FindAsync(id);
 
             if (mesa == null)
             {
@@ -78,7 +78,7 @@ namespace Comandas.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Mesa>> PostMesa(Mesa mesa)
         {
-            _context.Mesa.Add(mesa);
+            _context.Mesas.Add(mesa);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetMesa", new { id = mesa.Id }, mesa);
@@ -88,13 +88,13 @@ namespace Comandas.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMesa(int id)
         {
-            var mesa = await _context.Mesa.FindAsync(id);
+            var mesa = await _context.Mesas.FindAsync(id);
             if (mesa == null)
             {
                 return NotFound();
             }
 
-            _context.Mesa.Remove(mesa);
+            _context.Mesas.Remove(mesa);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -102,7 +102,7 @@ namespace Comandas.Api.Controllers
 
         private bool MesaExists(int id)
         {
-            return _context.Mesa.Any(e => e.Id == id);
+            return _context.Mesas.Any(e => e.Id == id);
         }
     }
 }

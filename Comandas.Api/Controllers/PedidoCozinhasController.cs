@@ -25,14 +25,14 @@ namespace Comandas.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PedidoCozinha>>> GetPedidoCozinha()
         {
-            return await _context.PedidoCozinha.ToListAsync();
+            return await _context.PedidoCozinhas.ToListAsync();
         }
 
         // GET: api/PedidoCozinhas/5
         [HttpGet("{id}")]
         public async Task<ActionResult<PedidoCozinha>> GetPedidoCozinha(int id)
         {
-            var pedidoCozinha = await _context.PedidoCozinha.FindAsync(id);
+            var pedidoCozinha = await _context.PedidoCozinhas.FindAsync(id);
 
             if (pedidoCozinha == null)
             {
@@ -78,7 +78,7 @@ namespace Comandas.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<PedidoCozinha>> PostPedidoCozinha(PedidoCozinha pedidoCozinha)
         {
-            _context.PedidoCozinha.Add(pedidoCozinha);
+            _context.PedidoCozinhas.Add(pedidoCozinha);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetPedidoCozinha", new { id = pedidoCozinha.Id }, pedidoCozinha);
@@ -88,13 +88,13 @@ namespace Comandas.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePedidoCozinha(int id)
         {
-            var pedidoCozinha = await _context.PedidoCozinha.FindAsync(id);
+            var pedidoCozinha = await _context.PedidoCozinhas.FindAsync(id);
             if (pedidoCozinha == null)
             {
                 return NotFound();
             }
 
-            _context.PedidoCozinha.Remove(pedidoCozinha);
+            _context.PedidoCozinhas.Remove(pedidoCozinha);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -102,7 +102,7 @@ namespace Comandas.Api.Controllers
 
         private bool PedidoCozinhaExists(int id)
         {
-            return _context.PedidoCozinha.Any(e => e.Id == id);
+            return _context.PedidoCozinhas.Any(e => e.Id == id);
         }
     }
 }

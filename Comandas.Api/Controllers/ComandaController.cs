@@ -1,4 +1,5 @@
 ﻿using Comandas.Api.Data;
+using Comandas.Api.Dtos;
 using Comandas.Api.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,11 +26,29 @@ namespace Comandas.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Comanda> GetComanda(string id)
+        public async Task<ActionResult<ComandaGetDto>> GetComanda(int id)
         {
-            var comanda = _context.Comandas.Find(id);
-            if (comanda == null) return NotFound();
-            return comanda;
+            var comanda = await _context.Comandas.FirstOrDefaultAsync(x => x.Id == id);
+            if (comanda == null)
+            {
+                return NotFound();
+            }
+            var comandaDto = new ComandaGetDto
+            {
+                NumeroMesa = comanda.NumeroMesa,
+                NomeCliente = comanda.NomeCliente
+            };
+            var comandaItemsDto = await _context.ComandaItems.
+                Include(ci => ci.CardapioItem).
+                Where(x => x.ComandaId == id).
+                Select(s => new ComandaItemsGetDto
+                {
+                    Id = s.Id,
+                    Titulo = s.CardapioItem.Titulo,
+                }).ToListAsync();
+
+            comandaDto.ComandaItems = comandaItemsDto;
+            return comandaDto;
         }
 
         [HttpPost]

@@ -38,7 +38,75 @@ namespace Comandas.Api
                           Preco = 9M,
                           Titulo = "COCA COLA LATA 350 ML"
                       });
+
             }
+            if (!appDbContext.Mesas.Any())
+            {
+                appDbContext.Mesas.AddRange(
+                    new Models.Mesa
+                    {
+                        NumeroMesa = 1,
+                        SituacaoMesa = 0
+
+                    },
+                    new Mesa
+                    {
+                        NumeroMesa = 2,
+                        SituacaoMesa = 0
+                    },
+                     new Mesa
+                     {
+                         NumeroMesa = 3,
+                         SituacaoMesa = 0
+                     },
+                      new Mesa
+                      {
+                          NumeroMesa = 4,
+                          SituacaoMesa = 0
+                      });
+            }
+
+            if (!appDbContext.Comandas.Any())
+            {
+                var comanda = new Comanda()
+                {
+                    NomeCliente = "Daniel Silva",
+                    NumeroMesa = 1,
+                    SituacaoComanda = 1
+                };
+                appDbContext.Comandas.Add(comanda);
+
+                ComandaItem[] comandaItems = { new ComandaItem { Comanda = comanda, CardapioItemId = 1 }, new ComandaItem { Comanda = comanda, CardapioItemId = 2 } };
+
+                if (!appDbContext.ComandaItems.Any())
+                {
+                    appDbContext.ComandaItems.AddRange(comandaItems);
+                }
+
+
+                var pedidoCozinha = new PedidoCozinha()
+                {
+                    Comanda = comanda
+                };
+
+                var pedidoCozinha2 = new PedidoCozinha()
+                {
+                    Comanda = comanda
+                };
+                PedidoCozinhaItem[] pedidoCozinhaItems =
+                    { new PedidoCozinhaItem {
+                          PedidoCozinha = pedidoCozinha, ComandaItem = comandaItems[0]              
+                    },
+                    new PedidoCozinhaItem {
+                        PedidoCozinha = pedidoCozinha2, ComandaItem = comandaItems[1]
+                    }
+                
+                };
+
+                appDbContext.PedidoCozinhas.AddRange(pedidoCozinha, pedidoCozinha2);
+                appDbContext.PedidoCozinhaItems.AddRange(pedidoCozinhaItems);
+            }
+            appDbContext.SaveChanges();
         }
     }
 }
