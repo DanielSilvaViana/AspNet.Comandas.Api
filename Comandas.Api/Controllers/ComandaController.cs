@@ -16,6 +16,7 @@ namespace Comandas.Api.Controllers
         private const int SITUACAO_MESA_OCUPADA = 1;
         private const int SITUACAO_MESA_DISPONIVEL = 0;
         private const int SITUACAO_PEDIDO_PENDENTE = 1;
+        private const int SITUACAO_COMANDA_ENCERRADA = 2;
 
 
 
@@ -209,29 +210,66 @@ namespace Comandas.Api.Controllers
 
                 }
 
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Comandas.Any(c => c.Id == id))
-                        return NotFound();
-                    throw;
-                }
-                return NoContent();
             }
-            [HttpDelete("{id}")]
-            public IActionResult DeleteComanda(string id)
+
+            try
             {
-                var comanda = _context.Comandas.Find(id);
-                if (comanda == null) return NotFound();
-
-                _context.Comandas.Remove(comanda);
-                _context.SaveChanges();
-
-                return NoContent();
+                await _context.SaveChangesAsync();
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Comandas.Any(c => c.Id == id))
+                    return NotFound();
+                throw;
+            }
+            return NoContent();
+
+        }
+        [HttpDelete("{id}")]
+        public IActionResult DeleteComanda(string id)
+        {
+            var comanda = _context.Comandas.Find(id);
+            if (comanda == null) return NotFound();
+
+            _context.Comandas.Remove(comanda);
+            _context.SaveChanges();
+
+            return NoContent();
         }
 
+        [HttpPatch("{id}")]
+
+        public async Task<ActionResult> PatchComanda(int id)
+        {
+            //Consultar a Comanda
+            var consultaComanda = await _context.Comandas.FirstOrDefaultAsync(comanda => comanda.Id == id);
+
+            if (consultaComanda == null)
+            {
+                return NotFound("Comanda Não Encontrada!");
+            }
+
+            //Alterar a Situação da Comanda
+
+            consultaComanda.SituacaoComanda = SITUACAO_COMANDA_ENCERRADA;
+
+            //Liberar a Mesa
+            var mesa = await _context.Mesas.FirstOrDefaultAsync(mesa => mesa.NumeroMesa == consultaComanda.NumeroMesa);
+
+            if (mesa == null)
+            {
+                return NotFound("Mesa Não Encontrada!");
+            }
+
+            mesa.SituacaoMesa = SITUACAO_MESA_DISPONIVEL;
+
+            // Salvar as Alterações no banco
+
+            await _context.SaveChangesAsync();
+
+            //Retornar um NonContent
+            return NoContent();
+        }
     }
+
+}
