@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
 using Comandas.Api.Models;
+using Comandas.Api.Dtos;
 
 namespace Comandas.Api.Controllers
 {
@@ -23,37 +24,65 @@ namespace Comandas.Api.Controllers
 
         // GET: api/CardapioItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CardapioItem>>> GetCardapioItems()
+        public async Task<ActionResult<IEnumerable<CardapioItemDto>>> GetCardapioItems()
         {
-            return await _context.CardapioItems.ToListAsync();
+            return await _context.CardapioItems.Select(x => new CardapioItemDto
+            {
+                Id = x.Id,
+                Descricao = x.Descricao,
+                PossuiPreparo = x.PossuiPreparo,
+                Preco = x.Preco,
+                Titulo = x.Titulo          
+            }).ToListAsync();
         }
 
         // GET: api/CardapioItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<CardapioItem>> GetCardapioItem(int id)
+        public async Task<ActionResult<CardapioItemDto>> GetCardapioItem(int id)
         {
             var cardapioItem = await _context.CardapioItems.FindAsync(id);
 
             if (cardapioItem == null)
             {
                 return NotFound();
-            }            
+            }
 
-            return cardapioItem;
+            return new CardapioItemDto
+            {
+                Id = cardapioItem.Id,
+                Descricao = cardapioItem.Descricao,
+                PossuiPreparo = cardapioItem.PossuiPreparo,
+                Titulo= cardapioItem.Titulo,
+                Preco = cardapioItem.Preco
+            };           
         }
 
         // PUT: api/CardapioItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCardapioItem(int id, CardapioItem cardapioItem)
+        public async Task<IActionResult> PutCardapioItem(int id, CardapioUpdateDto cardapioItemDto)
         {
-            if (id != cardapioItem.Id)
+            if (id != cardapioItemDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(cardapioItem).State = EntityState.Modified;
+            //Consultar e Obter cardapio do banco
 
+            var cardapio = await _context.CardapioItems.FindAsync(id);
+
+            if (cardapio == null)
+            {
+                return NotFound();
+            }
+
+            //Atribuir as propriedades de usuário no banco
+
+            cardapio.Titulo = cardapioItemDto.Titulo;
+            cardapio.Preco = cardapioItemDto.Preco;
+            cardapio.Descricao = cardapioItemDto.Descricao;
+            cardapio.PossuiPreparo = cardapioItemDto.PossuiPreparo;
+            
             try
             {
                 await _context.SaveChangesAsync();
@@ -76,12 +105,20 @@ namespace Comandas.Api.Controllers
         // POST: api/CardapioItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<CardapioItem>> PostCardapioItem(CardapioItem cardapioItem)
+        public async Task<ActionResult<CardapioItem>> PostCardapioItem(CardapioCreateDto cardapioItemDto)
         {
-            _context.CardapioItems.Add(cardapioItem);
+            var cardapio = new CardapioItem
+            {
+                Titulo = cardapioItemDto.Titulo,
+                Descricao = cardapioItemDto.Descricao,
+                PossuiPreparo = cardapioItemDto.PossuiPreparo,
+                Preco = cardapioItemDto.Preco
+            };
+
+            _context.CardapioItems.Add(cardapio);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCardapioItem", new { id = cardapioItem.Id }, cardapioItem);
+            return CreatedAtAction("GetCardapioItem", new { id = cardapio.Id }, cardapio);
         }
 
         // DELETE: api/CardapioItems/5

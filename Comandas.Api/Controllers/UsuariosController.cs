@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
 using Comandas.Api.Models;
+using Comandas.Api.Dtos;
 
 namespace Comandas.Api.Controllers
 {
@@ -23,14 +24,19 @@ namespace Comandas.Api.Controllers
 
         // GET: api/Usuarios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
+        public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
         {
-            return await _context.Usuarios.ToListAsync();
+            return await _context.Usuarios.Select(x => new UsuarioDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Email = x.Email
+            }).ToListAsync();
         }
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetUsuario(int id)
+        public async Task<ActionResult<UsuarioDto>> GetUsuario(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
 
@@ -39,20 +45,40 @@ namespace Comandas.Api.Controllers
                 return NotFound();
             }
 
-            return usuario;
+            return new UsuarioDto
+            {
+
+                Id = usuario.Id,
+                Name = usuario.Name,
+                Email = usuario.Email
+
+            };
         }
 
         // PUT: api/Usuarios/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuario(int id, Usuario usuario)
+        public async Task<IActionResult> PutUsuario(int id, UsuarioUpdateDto usuarioDto)
         {
-            if (id != usuario.Id)
+            if (id != usuarioDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(usuario).State = EntityState.Modified;
+            // Consultar e Obter usuario do banco
+
+            var usuario = await _context.Usuarios.FindAsync(id);
+
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+
+            // Atribuir as propriedades de usuario no banco
+
+            usuario.Name = usuarioDto.Name;
+            usuario.Email = usuarioDto.Email;
+            usuario.Senha = usuarioDto.Senha;
 
             try
             {
@@ -76,8 +102,15 @@ namespace Comandas.Api.Controllers
         // POST: api/Usuarios
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
+        public async Task<ActionResult<UsuarioCreateDto>> PostUsuario(UsuarioCreateDto usuarioDto)
         {
+            var usuario = new Usuario
+            {
+                Email = usuarioDto.Email,
+                Name = usuarioDto.Name,
+                Senha = usuarioDto.Senha,
+            };
+
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
