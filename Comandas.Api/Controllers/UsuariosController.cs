@@ -8,6 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
 using Comandas.Api.Models;
 using Comandas.Api.Dtos;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace Comandas.Api.Controllers
 {
@@ -20,6 +25,61 @@ namespace Comandas.Api.Controllers
         public UsuariosController(AppDbContext context)
         {
             _context = context;
+        }
+
+        [HttpPost("login")]
+
+        public async Task<ActionResult<UsuarioResponse>> Login([FromBody] UsuarioRequest usuarioRequest)
+        {
+            //Consultar Usuario no banco atraves do Email
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.Equals(usuarioRequest.Email));
+            //Verificar se encontrou o usuário
+            if (usuario == null)
+            {
+                return NotFound("Usuário Invalido!");
+            }
+
+            //Verificar se a Senha está correta
+            if (usuario.Senha.Equals(usuarioRequest.Senha))
+            {
+                //Gerar o token
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var chaveSecreta = Encoding.UTF8.GetBytes("3e8acfc238f45a314fd4b2bde272678ad30bd1774743a11dbc5c53ac71ca494b");
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new Claim[]
+                {
+                new Claim(ClaimTypes.Name, usuario.Name),
+                new Claim("Minha Claim","Oi"),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+
+                }),
+                    Expires = DateTime.UtcNow.AddHours(1), // Tempo de expiração do token
+
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(chaveSecreta), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                return new UsuarioResponse
+                {
+                    Id = usuario.Id,
+                    Nome = usuario.Name,
+                    Token = tokenString
+                };
+            }
+            else
+            {
+                return BadRequest("Usuário/Senha Invalidos!");
+            }
+
+
+            return new UsuarioResponse
+            {
+                Id = 1,
+                Nome = "Daniel",
+                Token = "SDF"
+            };
         }
 
         // GET: api/Usuarios

@@ -26,12 +26,14 @@ namespace Comandas.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MesaDto>>> GetMesa()
         {
-            return await _context.Mesas.Select(m => new MesaDto
+            var mesa =  await _context.Mesas.Select(m => new MesaDto
             {
                 Id = m.Id,
                 NumeroMesa = m.NumeroMesa,
                 SituacaoMesa = m.SituacaoMesa,                
             }).ToListAsync();
+
+            return Ok(mesa);
         }
 
         // GET: api/Mesas/5
@@ -42,16 +44,16 @@ namespace Comandas.Api.Controllers
 
             if (mesa == null)
             {
-                return NotFound();
+                return NotFound("Mesa Não encontrada!");
             }
 
-            return new MesaDto
+            var retornoMesa =  new MesaDto
             {
                 Id = mesa.Id,
                 NumeroMesa = mesa.NumeroMesa,
                 SituacaoMesa = mesa.SituacaoMesa                
             };
-            
+            return Ok(retornoMesa);
         }
 
         // PUT: api/Mesas/5

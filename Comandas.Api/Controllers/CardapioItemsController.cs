@@ -26,7 +26,7 @@ namespace Comandas.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CardapioItemDto>>> GetCardapioItems()
         {
-            return await _context.CardapioItems.Select(x => new CardapioItemDto
+            var retornoCardapio =  await _context.CardapioItems.Select(x => new CardapioItemDto
             {
                 Id = x.Id,
                 Descricao = x.Descricao,
@@ -34,6 +34,7 @@ namespace Comandas.Api.Controllers
                 Preco = x.Preco,
                 Titulo = x.Titulo          
             }).ToListAsync();
+            return Ok(retornoCardapio);
         }
 
         // GET: api/CardapioItems/5
@@ -44,10 +45,10 @@ namespace Comandas.Api.Controllers
 
             if (cardapioItem == null)
             {
-                return NotFound();
+                return NotFound("Cardapio Não Cadastradao!");
             }
 
-            return new CardapioItemDto
+            var retornoCardapio =  new CardapioItemDto
             {
                 Id = cardapioItem.Id,
                 Descricao = cardapioItem.Descricao,
@@ -55,6 +56,7 @@ namespace Comandas.Api.Controllers
                 Titulo= cardapioItem.Titulo,
                 Preco = cardapioItem.Preco
             };           
+            return Ok(retornoCardapio);
         }
 
         // PUT: api/CardapioItems/5

@@ -35,14 +35,14 @@ namespace Comandas.Api.Controllers
             {
                 query = query.Where(w => w.SituacaoId == situacaoID);
             }
-            return await query
+            return Ok( await query
                 .Select(s => new PedidoCozinhaGetDto
                 {
                     Id = s.Id,
                     NumeroMesa = s.Comanda.NumeroMesa,
                     NomeCliente = s.Comanda.NomeCliente,
                     Titulo = s.PedidoCozinhaItens.First().ComandaItem.CardapioItem.Titulo
-                }).ToListAsync();
+                }).ToListAsync());
         }
 
         // GET: api/PedidoCozinhas/5

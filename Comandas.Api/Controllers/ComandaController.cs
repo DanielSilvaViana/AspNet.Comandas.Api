@@ -1,4 +1,4 @@
-﻿using Comandas.Api.Data;
+﻿ using Comandas.Api.Data;
 using Comandas.Api.Dtos;
 using Comandas.Api.Models;
 using Microsoft.AspNetCore.Http;
@@ -53,10 +53,11 @@ namespace Comandas.Api.Controllers
             var comanda = await _context.Comandas.FirstOrDefaultAsync(x => x.Id == id);
             if (comanda == null)
             {
-                return NotFound();
+                return NotFound("Comanda Não Encontrada!");
             }
             var comandaDto = new ComandaGetDto
             {
+                Id = comanda.Id,
                 NumeroMesa = comanda.NumeroMesa,
                 NomeCliente = comanda.NomeCliente
             };
@@ -70,7 +71,7 @@ namespace Comandas.Api.Controllers
                 }).ToListAsync();
 
             comandaDto.ComandaItems = comandaItemsDto;
-            return comandaDto;
+            return Ok(comandaDto);
         }
 
         [HttpPost]
