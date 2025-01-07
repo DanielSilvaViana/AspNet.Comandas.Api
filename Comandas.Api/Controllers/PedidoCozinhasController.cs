@@ -8,11 +8,15 @@ using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
 using Comandas.Api.Models;
 using Comandas.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Comandas.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+    [Tags("4. PedidosCozinhas")]
+
     public class PedidoCozinhasController : ControllerBase
     {
         private readonly AppDbContext _context;

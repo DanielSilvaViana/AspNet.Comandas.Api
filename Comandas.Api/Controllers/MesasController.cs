@@ -8,22 +8,34 @@ using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
 using Comandas.Api.Models;
 using Comandas.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Comandas.Services.Interfaces;
 
 namespace Comandas.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+    [Tags("2. Mesas")]
+
     public class MesasController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IMesasServices _mesaServices;
 
-        public MesasController(AppDbContext context)
+        public MesasController(AppDbContext context, IMesasServices mesasServices)
         {
             _context = context;
+            _mesaServices = mesasServices;
         }
 
         // GET: api/Mesas
+        /// <summary>
+        /// Retorna lista Mesa
+        /// </summary>
+        /// <returns>Retorna uma Lista de IEnumerable<MesaDto></returns>
         [HttpGet]
+
         public async Task<ActionResult<IEnumerable<MesaDto>>> GetMesa()
         {
             var mesa =  await _context.Mesas.Select(m => new MesaDto

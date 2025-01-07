@@ -8,11 +8,16 @@ using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
 using Comandas.Api.Models;
 using Comandas.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Comandas.Api.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
+    [Tags("1. Cardapios")]
+
     public class CardapioItemsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -23,7 +28,15 @@ namespace Comandas.Api.Controllers
         }
 
         // GET: api/CardapioItems
+        /// <summary>
+        /// Retorna uma lista de cardapio
+        /// </summary>
+        /// <returns>Retorna um IENumerable<CardapioItemDto></returns>
         [HttpGet]
+        [SwaggerOperation(Summary = "Retorna uma lista de cardapio", Description = "recupera uma lista de cardapio itens")]
+        [SwaggerResponse(200, "retorna uma lista de cardapio", typeof(List<CardapioItemDto>))]
+        [SwaggerResponse(401,"Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<IEnumerable<CardapioItemDto>>> GetCardapioItems()
         {
             var retornoCardapio =  await _context.CardapioItems.Select(x => new CardapioItemDto

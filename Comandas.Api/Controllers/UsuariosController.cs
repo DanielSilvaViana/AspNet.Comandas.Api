@@ -13,11 +13,15 @@ using System.Text;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Comandas.Api.Controllers
 {
+    [Tags("5. Usuarios")]
     [Route("api/[controller]")]
     [ApiController]
+
     public class UsuariosController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -27,8 +31,18 @@ namespace Comandas.Api.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Realiza o Login do Usuário na Aplicação
+        /// </summary>
+        /// <param name="usuarioRequest"></param>
+        /// <returns></returns>
+        [SwaggerOperation(Summary = "Realiza o Login do Usuário na Aplicação", Description = "Gera um Token de Autenticação JWT")]
+        [SwaggerResponse(200,"Retorna um Token de Autenticação JWT",typeof(UsuarioResponse))]
+        [SwaggerResponse(400, "BadRequest quando Senha Invalida", typeof(string))]
+        [SwaggerResponse(404, "NotFound Quando email não encontrado", typeof(string))]
+        [SwaggerResponse(500, "Internal Server Error, When processing request", typeof(string))]
         [HttpPost("login")]
-
+        
         public async Task<ActionResult<UsuarioResponse>> Login([FromBody] UsuarioRequest usuarioRequest)
         {
             //Consultar Usuario no banco atraves do Email
@@ -73,16 +87,12 @@ namespace Comandas.Api.Controllers
                 return BadRequest("Usuário/Senha Invalidos!");
             }
 
-
-            return new UsuarioResponse
-            {
-                Id = 1,
-                Nome = "Daniel",
-                Token = "SDF"
-            };
         }
 
         // GET: api/Usuarios
+        [SwaggerResponse(401,"Não autorizado se credenciais são invalidas")]
+        [SwaggerOperation(Summary = "Retorna lista de usuários",Description = "Retorna uma lista de usuários, contendo Id,Email,Nome")]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
         {
@@ -96,6 +106,7 @@ namespace Comandas.Api.Controllers
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<UsuarioDto>> GetUsuario(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
@@ -118,6 +129,8 @@ namespace Comandas.Api.Controllers
         // PUT: api/Usuarios/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize]
+
         public async Task<IActionResult> PutUsuario(int id, UsuarioUpdateDto usuarioDto)
         {
             if (id != usuarioDto.Id)
@@ -162,6 +175,7 @@ namespace Comandas.Api.Controllers
         // POST: api/Usuarios
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<UsuarioCreateDto>> PostUsuario(UsuarioCreateDto usuarioDto)
         {
             var usuario = new Usuario
@@ -179,6 +193,7 @@ namespace Comandas.Api.Controllers
 
         // DELETE: api/Usuarios/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);

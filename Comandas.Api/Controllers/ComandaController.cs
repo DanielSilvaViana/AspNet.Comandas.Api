@@ -1,6 +1,7 @@
 ﻿ using Comandas.Api.Data;
 using Comandas.Api.Dtos;
 using Comandas.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,9 @@ namespace Comandas.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+    [Tags("3. Comanda")]
+
     public class ComandaController : ControllerBase
     {
         private readonly AppDbContext _context;
