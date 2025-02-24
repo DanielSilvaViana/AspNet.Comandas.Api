@@ -1,4 +1,4 @@
-﻿using Comandas.Api.Models;
+﻿using Comandas.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Comandas.Api.Data

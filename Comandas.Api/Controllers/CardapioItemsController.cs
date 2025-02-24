@@ -54,7 +54,7 @@ namespace Comandas.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CardapioItemDto>> GetCardapioItem(int id)
         {
-            var cardapioItem = await _context.CardapioItems.FindAsync(id);
+            var cardapioItem = await _context.CardapioItems.AsNoTracking().TagWith(nameof(GetCardapioItem)).FirstOrDefaultAsync(x => x.Id == id);
 
             if (cardapioItem == null)
             {

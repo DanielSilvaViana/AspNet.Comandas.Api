@@ -1,5 +1,5 @@
 ﻿ using Comandas.Api.Data;
-using Comandas.Api.Dtos;
+using Comandas.Shared.Dtos;
 using Comandas.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

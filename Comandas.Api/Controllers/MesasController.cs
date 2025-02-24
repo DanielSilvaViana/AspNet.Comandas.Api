@@ -9,6 +9,7 @@ using Comandas.Api.Data;
 using Comandas.Api.Models;
 using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Comandas.Services;
 using Comandas.Services.Interfaces;
 
 namespace Comandas.Api.Controllers
@@ -21,9 +22,9 @@ namespace Comandas.Api.Controllers
     public class MesasController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IMesasServices _mesaServices;
+        private readonly IMesaServices _mesaServices;
 
-        public MesasController(AppDbContext context, IMesasServices mesasServices)
+        public MesasController(AppDbContext context, IMesaServices mesasServices)
         {
             _context = context;
             _mesaServices = mesasServices;

@@ -1,5 +1,6 @@
 using Comandas.Api;
 using Comandas.Api.Data;
+using Comandas.Services;
 using Comandas.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddConsole();
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
 //Adicionar o contexto do banco de dados, no caso SqlServer
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging());
+
 
 var chaveSecretaHexaDecimal = "1ec2d3ace73de4d656f76a1727fa957757fdae32b9a22176480a0c8d52149ffb";
 
@@ -44,7 +48,7 @@ builder.Services.AddAuthentication(opt =>
 });
 
 // Add services to the container.
-//builder.Services.AddScoped<IMesasServices>();
+builder.Services.AddScoped<IMesaServices,MesaService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
