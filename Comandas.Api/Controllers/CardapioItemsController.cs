@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
-using Comandas.Api.Models;
 using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
+using Comandas.Domain.Models;
 
 namespace Comandas.Api.Controllers
 {
@@ -52,6 +52,10 @@ namespace Comandas.Api.Controllers
 
         // GET: api/CardapioItems/5
         [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Retorna uma lista de cardapio por Id", Description = "recupera uma lista de cardapio itens por Id")]
+        [SwaggerResponse(200, "retorna uma lista de cardapio", typeof(List<CardapioItemDto>))]
+        [SwaggerResponse(401, "Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<CardapioItemDto>> GetCardapioItem(int id)
         {
             var cardapioItem = await _context.CardapioItems.AsNoTracking().TagWith(nameof(GetCardapioItem)).FirstOrDefaultAsync(x => x.Id == id);
@@ -75,6 +79,10 @@ namespace Comandas.Api.Controllers
         // PUT: api/CardapioItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [SwaggerOperation(Summary = "Altera e atualiza uma lista de cardapio por Id", Description = "Atualiza uma lista de cardapio itens por Id")]
+        [SwaggerResponse(200, "retorna uma lista de cardapio", typeof(List<CardapioItemDto>))]
+        [SwaggerResponse(401, "Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<IActionResult> PutCardapioItem(int id, CardapioUpdateDto cardapioItemDto)
         {
             if (id != cardapioItemDto.Id)
@@ -120,6 +128,10 @@ namespace Comandas.Api.Controllers
         // POST: api/CardapioItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [SwaggerOperation(Summary = "Faz uma chamada Post para localizar lista de cardapio", Description = "Post para retorno de uma lista de cardapio itens")]
+        [SwaggerResponse(200, "retorna uma lista de cardapio", typeof(List<CardapioItemDto>))]
+        [SwaggerResponse(401, "Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<CardapioItem>> PostCardapioItem(CardapioCreateDto cardapioItemDto)
         {
             var cardapio = new CardapioItem
@@ -138,6 +150,10 @@ namespace Comandas.Api.Controllers
 
         // DELETE: api/CardapioItems/5
         [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "EndPoint para deletar lista de cardapios", Description = "Deletar lista por Id")]
+        [SwaggerResponse(200, "retorna uma lista de cardapio", typeof(List<CardapioItemDto>))]
+        [SwaggerResponse(401, "Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<IActionResult> DeleteCardapioItem(int id)
         {
             var cardapioItem = await _context.CardapioItems.FindAsync(id);

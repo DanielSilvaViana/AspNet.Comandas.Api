@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
-using Comandas.Api.Models;
 using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Comandas.Domain.Models;
 
 namespace Comandas.Api.Controllers
 {

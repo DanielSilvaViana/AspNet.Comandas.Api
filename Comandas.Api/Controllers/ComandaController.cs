@@ -1,6 +1,8 @@
-﻿ using Comandas.Api.Data;
+﻿using Comandas.Api.Data;
+using Comandas.Domain.Models;
+using Comandas.Services.Interfaces;
 using Comandas.Shared.Dtos;
-using Comandas.Api.Models;
+using Comandas.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +18,7 @@ namespace Comandas.Api.Controllers
     public class ComandaController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IComandaServices _comandaServices;
         private const int SITUACAO_ABERTA = 1;
         private const int SITUACAO_MESA_OCUPADA = 1;
         private const int SITUACAO_MESA_DISPONIVEL = 0;
@@ -23,30 +26,19 @@ namespace Comandas.Api.Controllers
         private const int SITUACAO_COMANDA_ENCERRADA = 2;
 
 
-
-        public ComandaController(AppDbContext context)
+        private readonly ILogger<ComandaController> _logger;
+        public ComandaController(AppDbContext context, IComandaServices comandaServices, ILogger<ComandaController> logger)
         {
             _context = context;
+            _comandaServices = comandaServices;
+            _logger = logger;
         }
 
         [HttpGet]
 
         public async Task<ActionResult<IEnumerable<ComandaGetDto>>> GetComandas()
         {
-            var comandas = await _context.Comandas
-                .Where(c => c.SituacaoComanda == SITUACAO_ABERTA)
-                .Select(C => new ComandaGetDto
-                {
-
-                    Id = C.Id,
-                    NumeroMesa = C.NumeroMesa,
-                    NomeCliente = C.NomeCliente,
-                    SituacaoComanda = C.SituacaoComanda,
-                    ComandaItems = C.ComandaItems
-                   .Select(ci => new ComandaItemsGetDto { Id = ci.Id, Titulo = ci.CardapioItem.Titulo })
-                   .ToList(),
-
-                }).ToListAsync();
+            var comandas = await _comandaServices.GetComandas();
 
             return Ok(comandas);
         }
@@ -54,180 +46,67 @@ namespace Comandas.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ComandaGetDto>> GetComanda(int id)
         {
-            var comanda = await _context.Comandas.FirstOrDefaultAsync(x => x.Id == id);
-            if (comanda == null)
+            try
             {
-                return NotFound("Comanda Não Encontrada!");
+                var comanda = await _comandaServices.GetComandaAsync(id);
+                return Ok(comanda);
             }
-            var comandaDto = new ComandaGetDto
+            catch (NotFoundException ex)
             {
-                Id = comanda.Id,
-                NumeroMesa = comanda.NumeroMesa,
-                NomeCliente = comanda.NomeCliente
-            };
-            var comandaItemsDto = await _context.ComandaItems.
-                Include(ci => ci.CardapioItem).
-                Where(x => x.ComandaId == id).
-                Select(s => new ComandaItemsGetDto
-                {
-                    Id = s.Id,
-                    Titulo = s.CardapioItem.Titulo,
-                }).ToListAsync();
 
-            comandaDto.ComandaItems = comandaItemsDto;
-            return Ok(comandaDto);
+                return NotFound(ex.Message);
+            }
+            catch(Exception ex) 
+            {
+                _logger.LogError("Erro Interno não tratado", ex);
+                return StatusCode(500,"Erro Interno no Servidor!");
+            }
+            
         }
 
         [HttpPost]
         public async Task<ActionResult<ComandaDto>> PostComanda(ComandaDto comandadto)
         {
-            var mesa = await _context.Mesas.FirstOrDefaultAsync(m => m.NumeroMesa == comandadto.NumeroMesa);
-            if (mesa is null)
+            try
             {
-                return BadRequest("Mesa não encontrada!");
+                var comanda = await _comandaServices.PostComandaAsync(comandadto);
+                return CreatedAtAction(nameof(GetComanda), new { id = comanda.Id }, comanda);
+
             }
-            if (mesa.SituacaoMesa != 0)
+            catch (NotFoundException ex)
             {
-                return BadRequest("Mesa Ocupada!");
+                return NotFound(ex.Message);
             }
-
-            mesa.SituacaoMesa = SITUACAO_MESA_OCUPADA;
-
-            var novaComanda = new Comanda
+            catch (Exception ex)
             {
-                NumeroMesa = comandadto.NumeroMesa,
-                NomeCliente = comandadto.NomeCliente
-            };
-
-            _context.Comandas.Add(novaComanda);
-
-            foreach (var item in comandadto.CardapioItems)
-            {
-                var novoComandaItem = new ComandaItem
-                {
-                    Comanda = novaComanda,
-                    CardapioItemId = item
-                };
-
-                await _context.ComandaItems.AddAsync(novoComandaItem);
-                var cardapioItem = await _context.CardapioItems.FindAsync(item);
-
-                if (cardapioItem is null)
-                {
-                    return BadRequest("Cardápio Inválido!");
-                }
-                if (cardapioItem.PossuiPreparo)
-                {
-                    var novoPedidoCozinha = new PedidoCozinha
-                    {
-                        Comanda = novaComanda
-                    };
-
-                    await _context.PedidoCozinhas.AddAsync(novoPedidoCozinha);
-
-                    var novoPedidoCozinhaItem = new PedidoCozinhaItem
-                    {
-                        PedidoCozinha = novoPedidoCozinha,
-                        ComandaItem = novoComandaItem
-                    };
-
-                    await _context.PedidoCozinhaItems.AddAsync(novoPedidoCozinhaItem);
-                }
+                _logger.LogError("Erro Interno não Tratado", ex);
+                return StatusCode(500, "Erro Interno no Servidor!");
             }
 
-            _context.SaveChanges();
-            return CreatedAtAction(nameof(GetComanda), new { id = novaComanda.Id }, comandadto);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutComanda(int id, ComandaUpdateDto comandaUpdateDto)
         {
-            if (id != comandaUpdateDto.Id) return BadRequest();
-
-            var comanda = await _context.Comandas.FirstOrDefaultAsync(c => c.Id == comandaUpdateDto.Id);
-            if (comandaUpdateDto.NumeroMesa > 0)
-            {
-                var mesa = await _context.Mesas.FirstOrDefaultAsync(m => m.NumeroMesa == comandaUpdateDto.NumeroMesa);
-                if (mesa is null)
-                {
-                    return BadRequest("Mesa Não Encontrada!");
-                }
-                if (mesa.SituacaoMesa != 0)
-                {
-                    return BadRequest("Mesa Ocupada");
-                }
-
-                mesa.SituacaoMesa = SITUACAO_MESA_OCUPADA;
-
-                var mesaAtual = await _context.Mesas.FirstOrDefaultAsync(m => m.NumeroMesa == comanda.NumeroMesa);
-                mesaAtual.SituacaoMesa = SITUACAO_MESA_DISPONIVEL;
-
-                comanda.NumeroMesa = comandaUpdateDto.NumeroMesa;
-            }
-
-            if (!string.IsNullOrEmpty(comandaUpdateDto.NomeCliente))
-                comanda.NomeCliente = comandaUpdateDto.NomeCliente;
-
-            foreach (var item in comandaUpdateDto.ComandaItens)
-            {
-                if (item.incluir)
-                {
-                    var novoComandaItem = new ComandaItem
-                    {
-                        Comanda = comanda,
-                        CardapioItemId = item.cardapioItemId
-                    };
-                    await _context.ComandaItems.AddAsync(novoComandaItem);
-
-                    var cardapioItem = await _context.CardapioItems.FirstOrDefaultAsync(ca => ca.Id == item.cardapioItemId);
-
-                    if (cardapioItem is null)
-                    {
-                        return BadRequest("Cardapio não encontrado!");
-                    }
-                    if (cardapioItem.PossuiPreparo)
-                    {
-                        var pedidoCozinha = new PedidoCozinha
-                        {
-                            Comanda = comanda,
-                            SituacaoId = SITUACAO_MESA_DISPONIVEL
-
-                        };
-                        await _context.PedidoCozinhas.AddAsync(pedidoCozinha);
-                        var pedidoCozinhaItem = new PedidoCozinhaItem
-                        {
-                            PedidoCozinha = pedidoCozinha,
-                            ComandaItem = novoComandaItem
-                        };
-                        await _context.PedidoCozinhaItems.AddAsync(pedidoCozinhaItem);
-                    }
-                }
-                if (item.excluir)
-                {
-                    var comandaItemExcluir = await _context.ComandaItems.FirstOrDefaultAsync(ci => ci.Id == item.Id);
-
-                    if (comandaItemExcluir is null)
-                    {
-                        return BadRequest("Item da comanda informado inválido!");
-
-                    }
-                    _context.ComandaItems.Remove(comandaItemExcluir);
-
-                }
-
-            }
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _comandaServices.PutComandaAsync(comandaUpdateDto);
+                return NoContent();
+
             }
-            catch (DbUpdateConcurrencyException)
+            catch (BadRequestException ex)
             {
-                if (!_context.Comandas.Any(c => c.Id == id))
-                    return NotFound();
-                throw;
+
+                return BadRequest(ex.Message);
             }
-            return NoContent();
+
+            catch(Exception ex)
+            {
+                _logger.LogError(ex,ex.Message);
+                return StatusCode(500,"Erro Interno do Servidor!");
+            }
+
+            
 
         }
         [HttpDelete("{id}")]

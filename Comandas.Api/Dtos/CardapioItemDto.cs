@@ -1,5 +1,4 @@
-﻿using Comandas.Api.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Comandas.Api.Dtos
 {

@@ -1,4 +1,5 @@
-﻿using Comandas.Shared.Dtos;
+﻿using Comandas.Domain.Models;
+using Comandas.Shared.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,10 @@ namespace Comandas.Data.Interfaces
 {
     public interface IComandaRepository
     {
-       public Task<IEnumerable<ComandaGetDto>> GetComandas();
-
+        Task Add(Comanda novaComanda);
+        Task<Comanda?> GetByIdAsync(int id);
+        Task<ComandaGetDto> GetComandaAsync(int id);
+        public Task<IEnumerable<ComandaGetDto>> GetComandas();
+        Task SaveChangesAsync();
     }
 }

@@ -6,11 +6,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
-using Comandas.Api.Models;
 using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Comandas.Services;
 using Comandas.Services.Interfaces;
+using Comandas.Domain.Models;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Comandas.Api.Controllers
 {
@@ -36,7 +37,10 @@ namespace Comandas.Api.Controllers
         /// </summary>
         /// <returns>Retorna uma Lista de IEnumerable<MesaDto></returns>
         [HttpGet]
-
+        [SwaggerOperation(Summary = "Retorna uma lista e situação de Mesas", Description = "recupera uma lista de mesas")]
+        [SwaggerResponse(200, "retorna uma lista e situação de Mesa", typeof(List<MesaDto>))]
+        [SwaggerResponse(401, "Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<IEnumerable<MesaDto>>> GetMesa()
         {
             var mesa =  await _context.Mesas.Select(m => new MesaDto

@@ -1,0 +1,14 @@
+﻿using Comandas.Domain.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Comandas.Data.Interfaces
+{
+    public interface IPedidoCozinhaRepository
+    {
+        Task AddAsync(PedidoCozinha novoPedidoCozinha);
+    }
+}

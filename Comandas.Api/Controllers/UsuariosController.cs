@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
-using Comandas.Api.Models;
 using Comandas.Api.Dtos;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -15,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
+using Comandas.Domain.Models;
 
 namespace Comandas.Api.Controllers
 {

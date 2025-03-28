@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace Comandas.Services.Interfaces
 {
-    internal interface IComandaServices
+    public interface IComandaServices
     {
+        Task<ComandaGetDto> GetComandaAsync(int id);
         Task<IEnumerable<ComandaGetDto>> GetComandas();
+        Task<ComandaCreateDto> PostComandaAsync(ComandaDto comandadto);
+        Task PutComandaAsync(ComandaUpdateDto comandaUpdateDto);
     }
 }

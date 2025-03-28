@@ -1,5 +1,5 @@
 ﻿using Comandas.Api.Data;
-using Comandas.Api.Models;
+using Comandas.Domain.Models;
 
 namespace Comandas.Api
 {
@@ -9,7 +9,7 @@ namespace Comandas.Api
         {
             if (!appDbContext.Usuarios.Any())
             {
-                appDbContext.Usuarios.Add(new Models.Usuario
+                appDbContext.Usuarios.Add(new Usuario
                 { Name = "Admin", Email = "admin@admin.com", Senha = "admin" });
                 appDbContext.SaveChanges();
             }
@@ -17,7 +17,7 @@ namespace Comandas.Api
             if (!appDbContext.CardapioItems.Any())
             {
                 appDbContext.CardapioItems.AddRange(
-                    new Models.CardapioItem
+                    new CardapioItem
                     {
                         Descricao = "XIS SALADA , BIFE, OVO, PRESUNTO, QUEIJO",
                         PossuiPreparo = true,
@@ -43,7 +43,7 @@ namespace Comandas.Api
             if (!appDbContext.Mesas.Any())
             {
                 appDbContext.Mesas.AddRange(
-                    new Models.Mesa
+                    new Mesa
                     {
                         NumeroMesa = 1,
                         SituacaoMesa = 0

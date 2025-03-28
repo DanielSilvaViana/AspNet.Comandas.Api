@@ -1,5 +1,7 @@
 using Comandas.Api;
 using Comandas.Api.Data;
+using Comandas.Data.Interfaces;
+using Comandas.Data.Repository;
 using Comandas.Services;
 using Comandas.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.AddConsole();
@@ -17,7 +20,6 @@ builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
 //Adicionar o contexto do banco de dados, no caso SqlServer
 
 builder.Services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging());
-
 
 var chaveSecretaHexaDecimal = "1ec2d3ace73de4d656f76a1727fa957757fdae32b9a22176480a0c8d52149ffb";
 
@@ -49,6 +51,17 @@ builder.Services.AddAuthentication(opt =>
 
 // Add services to the container.
 builder.Services.AddScoped<IMesaServices,MesaService>();
+builder.Services.AddScoped<IComandaServices, ComandaServices>();
+builder.Services.AddScoped<IComandaRepository, ComandaRepository>();
+builder.Services.AddScoped<IPedidoCozinhaItemRepository, PedidoCozinhaItemRepository>();
+builder.Services.AddScoped<IPedidoCozinhaRepository, PedidoCozinhaRepository>();
+builder.Services.AddScoped<ICardapioItemRepository, CardapioItemRepository>();
+builder.Services.AddScoped<IComandaItemRepository, ComandaItemRepository>();
+builder.Services.AddScoped<IMesaRepository, MesaRepository>();
+
+
+
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

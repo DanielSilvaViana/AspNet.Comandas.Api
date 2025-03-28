@@ -1,10 +1,15 @@
+using Castle.Core.Logging;
 using Comandas.Api.Controllers;
 using Comandas.Api.Data;
 using Comandas.Api.Dtos;
-using Comandas.Api.Models;
+using Comandas.Domain.Models;
+using Comandas.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Comandas.Testes
 {
@@ -12,14 +17,21 @@ namespace Comandas.Testes
     {
         private readonly ComandaController _controller;
         private readonly AppDbContext _appDbContext;
+        private readonly IComandaServices _comandaServices;
+        private readonly ILogger<ComandaController> _logger;
+
 
         public ComandaControllerTest()
         {
-            var serviceProvider = new ServiceCollection().AddDbContext<AppDbContext>(option => option.UseInMemoryDatabase(Guid.NewGuid().ToString())).BuildServiceProvider();
+            var serviceProvider = new ServiceCollection().
+                AddDbContext<AppDbContext>(option => option.UseInMemoryDatabase(Guid.NewGuid().ToString())).AddLogging().BuildServiceProvider();
             var scope = serviceProvider.CreateScope();
             _appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            _comandaServices = scope.ServiceProvider.GetRequiredService<IComandaServices>();
 
-            _controller = new ComandaController(_appDbContext);
+            _logger = scope.ServiceProvider.GetRequiredService<ILogger<ComandaController>>();
+
+            _controller = new ComandaController(_appDbContext,_comandaServices,_logger);
 
             inserirDados();
         }

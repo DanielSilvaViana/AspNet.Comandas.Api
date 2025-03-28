@@ -1,5 +1,4 @@
-﻿using Comandas.Api.Models;
-
+﻿
 namespace Comandas.Api.Dtos
 {
     public class ComandaGetDto

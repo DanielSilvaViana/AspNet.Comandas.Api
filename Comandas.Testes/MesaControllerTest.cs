@@ -1,7 +1,7 @@
 using Comandas.Api.Controllers;
 using Comandas.Api.Data;
 using Comandas.Api.Dtos;
-using Comandas.Api.Models;
+using Comandas.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
