@@ -74,9 +74,14 @@ namespace Comandas.Data.Repository
            await _context.SaveChangesAsync();
         }
 
-        public async Task<Comanda?> GetByIdAsync(int id)
+        public async Task<Comanda> GetByIdAsync(int id)
         {
-            return await _context.Comandas.FindAsync(id);
+            return await _context.Comandas.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public  void RemoverComanda(Comanda comanda)
+        {
+             _context.Comandas.Remove(comanda);
         }
     }
 }

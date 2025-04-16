@@ -6,14 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Comandas.Data.Interfaces
+namespace Comandas.Services.Interfaces
 {
-    public interface ICardapioItemRepository
+    public interface ICardapioItemServices
     {
         Task DeleteCardapioAsync(int id);
-        Task<CardapioItem> FindAsync(int item);
-        Task<IEnumerable<CardapioItemDto>> GetCardapioItemsAsync();
-        Task<CardapioItemDto> GetCardapioItemsById(int id);
+        Task<IEnumerable<CardapioItemDto>> GetCardapioItems();
+        Task<CardapioItemDto> GetCardapioItemsAsync(int id);
         Task<CardapioItem> PostCardapioItemAsync(CardapioCreateDto cardapioItemDto);
         Task PutCardapioItemAsync(CardapioUpdateDto cardapioItemDto, int id);
     }

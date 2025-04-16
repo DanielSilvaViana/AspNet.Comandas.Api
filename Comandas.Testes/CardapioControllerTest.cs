@@ -1,7 +1,9 @@
 using Comandas.Api.Controllers;
 using Comandas.Api.Data;
 using Comandas.Api.Dtos;
+using Comandas.Data.Interfaces;
 using Comandas.Domain.Models;
+using Comandas.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,14 +14,16 @@ namespace Comandas.Testes
     {
         private readonly CardapioItemsController _controller;
         private readonly AppDbContext _appDbContext;
+        private readonly ICardapioItemServices _cardapioItemServices;
 
         public CardapioControllerTest()
         {
             var serviceProvider = new ServiceCollection().AddDbContext<AppDbContext>(option => option.UseInMemoryDatabase(Guid.NewGuid().ToString())).BuildServiceProvider();
             var scope = serviceProvider.CreateScope();
             _appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            _cardapioItemServices = scope.ServiceProvider.GetRequiredService<ICardapioItemServices>();
 
-            _controller = new CardapioItemsController(_appDbContext);
+            _controller = new CardapioItemsController(_appDbContext, _cardapioItemServices);
 
             inserirDados();
         }

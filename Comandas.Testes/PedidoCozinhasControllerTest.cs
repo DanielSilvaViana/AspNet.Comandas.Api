@@ -2,6 +2,7 @@ using Comandas.Api.Controllers;
 using Comandas.Api.Data;
 using Comandas.Api.Dtos;
 using Comandas.Domain.Models;
+using Comandas.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,14 +13,16 @@ namespace Comandas.Testes
     {
         private readonly PedidoCozinhasController _controller;
         private readonly AppDbContext _appDbContext;
+        private readonly IPedidoCozinhasServices _pedidoCozinhasServices;
 
         public PedidoCozinhaControllerTest()
         {
             var serviceProvider = new ServiceCollection().AddDbContext<AppDbContext>(option => option.UseInMemoryDatabase(Guid.NewGuid().ToString())).BuildServiceProvider();
             var scope = serviceProvider.CreateScope();
             _appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            _pedidoCozinhasServices = scope.ServiceProvider.GetRequiredService<IPedidoCozinhasServices>();
 
-            _controller = new PedidoCozinhasController(_appDbContext);
+            _controller = new PedidoCozinhasController(_appDbContext, _pedidoCozinhasServices);
 
             inserirDados();
         }

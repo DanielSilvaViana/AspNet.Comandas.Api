@@ -6,10 +6,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
-using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Comandas.Domain.Models;
+using Comandas.Services.Interfaces;
+using Comandas.Data.Interfaces;
+using Comandas.Data.Repository;
+using Comandas.Shared.Exceptions;
+using Comandas.Shared.Dtos;
 
 namespace Comandas.Api.Controllers
 {
@@ -21,10 +25,13 @@ namespace Comandas.Api.Controllers
     public class CardapioItemsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ICardapioItemServices _cardapioItemServices;
 
-        public CardapioItemsController(AppDbContext context)
+
+        public CardapioItemsController(AppDbContext context, ICardapioItemServices cardapioItemRepository)
         {
             _context = context;
+            _cardapioItemServices = cardapioItemRepository;
         }
 
         // GET: api/CardapioItems
@@ -35,19 +42,15 @@ namespace Comandas.Api.Controllers
         [HttpGet]
         [SwaggerOperation(Summary = "Retorna uma lista de cardapio", Description = "recupera uma lista de cardapio itens")]
         [SwaggerResponse(200, "retorna uma lista de cardapio", typeof(List<CardapioItemDto>))]
-        [SwaggerResponse(401,"Acesso não autorizado,se credenciais inválidas")]
+        [SwaggerResponse(401, "Acesso não autorizado,se credenciais inválidas")]
         [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<IEnumerable<CardapioItemDto>>> GetCardapioItems()
         {
-            var retornoCardapio =  await _context.CardapioItems.Select(x => new CardapioItemDto
-            {
-                Id = x.Id,
-                Descricao = x.Descricao,
-                PossuiPreparo = x.PossuiPreparo,
-                Preco = x.Preco,
-                Titulo = x.Titulo          
-            }).ToListAsync();
+
+            var retornoCardapio = await _cardapioItemServices.GetCardapioItems();
+
             return Ok(retornoCardapio);
+
         }
 
         // GET: api/CardapioItems/5
@@ -58,22 +61,9 @@ namespace Comandas.Api.Controllers
         [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<CardapioItemDto>> GetCardapioItem(int id)
         {
-            var cardapioItem = await _context.CardapioItems.AsNoTracking().TagWith(nameof(GetCardapioItem)).FirstOrDefaultAsync(x => x.Id == id);
+            var cardapioItem = await _cardapioItemServices.GetCardapioItemsAsync(id);
 
-            if (cardapioItem == null)
-            {
-                return NotFound("Cardapio Não Cadastradao!");
-            }
-
-            var retornoCardapio =  new CardapioItemDto
-            {
-                Id = cardapioItem.Id,
-                Descricao = cardapioItem.Descricao,
-                PossuiPreparo = cardapioItem.PossuiPreparo,
-                Titulo= cardapioItem.Titulo,
-                Preco = cardapioItem.Preco
-            };           
-            return Ok(retornoCardapio);
+            return Ok(cardapioItem);
         }
 
         // PUT: api/CardapioItems/5
@@ -85,44 +75,18 @@ namespace Comandas.Api.Controllers
         [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<IActionResult> PutCardapioItem(int id, CardapioUpdateDto cardapioItemDto)
         {
-            if (id != cardapioItemDto.Id)
-            {
-                return BadRequest();
-            }
-
-            //Consultar e Obter cardapio do banco
-
-            var cardapio = await _context.CardapioItems.FindAsync(id);
-
-            if (cardapio == null)
-            {
-                return NotFound();
-            }
-
-            //Atribuir as propriedades de usuário no banco
-
-            cardapio.Titulo = cardapioItemDto.Titulo;
-            cardapio.Preco = cardapioItemDto.Preco;
-            cardapio.Descricao = cardapioItemDto.Descricao;
-            cardapio.PossuiPreparo = cardapioItemDto.PossuiPreparo;
-            
             try
             {
-                await _context.SaveChangesAsync();
+                await _cardapioItemServices.PutCardapioItemAsync(cardapioItemDto, id);
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (BadRequestException ex)
             {
-                if (!CardapioItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+
+                return BadRequest(ex.Message);
             }
 
-            return NoContent();
         }
 
         // POST: api/CardapioItems
@@ -134,18 +98,23 @@ namespace Comandas.Api.Controllers
         [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<CardapioItem>> PostCardapioItem(CardapioCreateDto cardapioItemDto)
         {
-            var cardapio = new CardapioItem
+            try
             {
-                Titulo = cardapioItemDto.Titulo,
-                Descricao = cardapioItemDto.Descricao,
-                PossuiPreparo = cardapioItemDto.PossuiPreparo,
-                Preco = cardapioItemDto.Preco
-            };
+                var cardapio = await _cardapioItemServices.PostCardapioItemAsync(cardapioItemDto);
 
-            _context.CardapioItems.Add(cardapio);
-            await _context.SaveChangesAsync();
+                return CreatedAtAction("GetCardapioItem", new { id = cardapioItemDto.Id }, cardapio);
+            }
+            catch (NotFoundException ex)
+            {
 
-            return CreatedAtAction("GetCardapioItem", new { id = cardapio.Id }, cardapio);
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, "Erro interno do Servidor");
+            }
+
         }
 
         // DELETE: api/CardapioItems/5
@@ -156,16 +125,19 @@ namespace Comandas.Api.Controllers
         [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<IActionResult> DeleteCardapioItem(int id)
         {
-            var cardapioItem = await _context.CardapioItems.FindAsync(id);
-            if (cardapioItem == null)
+            try
             {
-                return NotFound();
+                await _cardapioItemServices.DeleteCardapioAsync(id);
+
             }
+            catch (NotFoundException ex)
+            {
 
-            _context.CardapioItems.Remove(cardapioItem);
-            await _context.SaveChangesAsync();
+                return NotFound(ex.Message);
 
+            }
             return NoContent();
+
         }
 
         private bool CardapioItemExists(int id)

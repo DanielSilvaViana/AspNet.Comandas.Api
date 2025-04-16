@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 using System.Reflection;
 using System.Text;
 
@@ -50,6 +51,8 @@ builder.Services.AddAuthentication(opt =>
 });
 
 // Add services to the container.
+var multiPlexer = ConnectionMultiplexer.Connect("redis:6379");
+builder.Services.AddSingleton<IConnectionMultiplexer>(multiPlexer);
 builder.Services.AddScoped<IMesaServices,MesaService>();
 builder.Services.AddScoped<IComandaServices, ComandaServices>();
 builder.Services.AddScoped<IComandaRepository, ComandaRepository>();
@@ -58,6 +61,8 @@ builder.Services.AddScoped<IPedidoCozinhaRepository, PedidoCozinhaRepository>();
 builder.Services.AddScoped<ICardapioItemRepository, CardapioItemRepository>();
 builder.Services.AddScoped<IComandaItemRepository, ComandaItemRepository>();
 builder.Services.AddScoped<IMesaRepository, MesaRepository>();
+builder.Services.AddScoped<IRedisService, RedisService>();
+
 
 
 
@@ -115,6 +120,11 @@ builder.Services.AddSwaggerGen(b =>
         });
     }
     );
+
+builder.WebHost.ConfigureKestrel(x =>
+{
+    x.ListenAnyIP(5000);
+});
 
 var app = builder.Build();
 

@@ -9,6 +9,8 @@ using Comandas.Api.Data;
 using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Comandas.Domain.Models;
+using Comandas.Services.Interfaces;
+using Comandas.Shared.Exceptions;
 
 namespace Comandas.Api.Controllers
 {
@@ -20,47 +22,39 @@ namespace Comandas.Api.Controllers
     public class PedidoCozinhasController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IPedidoCozinhasServices _pedidoCozinhas;
 
-        public PedidoCozinhasController(AppDbContext context)
+        public PedidoCozinhasController(AppDbContext context, IPedidoCozinhasServices pedidoCozinhas)
         {
             _context = context;
+            _pedidoCozinhas = pedidoCozinhas;
         }
 
         // GET: api/PedidoCozinhas
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PedidoCozinhaGetDto>>> GetPedidoCozinha([FromQuery] int? situacaoID)
         {
-            var query = _context.PedidoCozinhas
-                .Include(c => c.Comanda)
-                .Include(pci => pci.PedidoCozinhaItens)
-                    .ThenInclude(ci => ci.ComandaItem)
-                        .ThenInclude(cai => cai.CardapioItem).AsQueryable();
-            if (situacaoID > 0)
-            {
-                query = query.Where(w => w.SituacaoId == situacaoID);
-            }
-            return Ok( await query
-                .Select(s => new PedidoCozinhaGetDto
-                {
-                    Id = s.Id,
-                    NumeroMesa = s.Comanda.NumeroMesa,
-                    NomeCliente = s.Comanda.NomeCliente,
-                    Titulo = s.PedidoCozinhaItens.First().ComandaItem.CardapioItem.Titulo
-                }).ToListAsync());
+            var query = await _pedidoCozinhas.GetPedidoCozinhaAsync(situacaoID);
+
+            return Ok(query);
         }
 
         // GET: api/PedidoCozinhas/5
         [HttpGet("{id}")]
         public async Task<ActionResult<PedidoCozinha>> GetPedidoCozinha(int id)
         {
-            var pedidoCozinha = await _context.PedidoCozinhas.FindAsync(id);
-
-            if (pedidoCozinha == null)
+            try
             {
-                return NotFound();
+                var pedidoCozinha = await _pedidoCozinhas.GetPedidoCozinhaByIdAsync(id);
+                return pedidoCozinha;
+            }
+            catch (NotFoundException ex)
+            {
+
+                return NotFound(ex.Message);
             }
 
-            return pedidoCozinha;
+
         }
 
         // PUT: api/PedidoCozinhas/5
@@ -68,53 +62,24 @@ namespace Comandas.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPedidoCozinha(int id, [FromQuery] int situacaoId)
         {
-            var pedido = await _context.PedidoCozinhas.FirstOrDefaultAsync(p => p.Id == id);
-
-            if (pedido == null)
-            {
-                return NotFound("Pedido não encontrado!");
-            }
-
-            pedido.SituacaoId = situacaoId;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _pedidoCozinhas.PutPedidoCozinhaAsync(situacaoId, id);
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (NotFoundException ex)
             {
-                if (!PedidoCozinhaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
-            return NoContent();
+                return NotFound(ex.Message);
+            }           
         }
 
         // DELETE: api/PedidoCozinhas/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePedidoCozinha(int id)
         {
-            var pedidoCozinha = await _context.PedidoCozinhas.FindAsync(id);
-            if (pedidoCozinha == null)
-            {
-                return NotFound();
-            }
-
-            _context.PedidoCozinhas.Remove(pedidoCozinha);
-            await _context.SaveChangesAsync();
-
+            var pedidoCozinha = await _pedidoCozinhas.DeletePedidoCozinhaAsync(id);
             return NoContent();
-        }
-
-        private bool PedidoCozinhaExists(int id)
-        {
-            return _context.PedidoCozinhas.Any(e => e.Id == id);
-        }
+        }       
     }
 }

@@ -31,7 +31,7 @@ namespace Comandas.Testes
 
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<ComandaController>>();
 
-            _controller = new ComandaController(_appDbContext,_comandaServices,_logger);
+            _controller = new ComandaController(_comandaServices,_logger);
 
             inserirDados();
         }

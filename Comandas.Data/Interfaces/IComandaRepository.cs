@@ -11,9 +11,10 @@ namespace Comandas.Data.Interfaces
     public interface IComandaRepository
     {
         Task Add(Comanda novaComanda);
-        Task<Comanda?> GetByIdAsync(int id);
+        Task<Comanda> GetByIdAsync(int id);
         Task<ComandaGetDto> GetComandaAsync(int id);
         public Task<IEnumerable<ComandaGetDto>> GetComandas();
+        void RemoverComanda(Comanda comanda);
         Task SaveChangesAsync();
     }
 }

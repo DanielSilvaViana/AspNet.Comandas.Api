@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Comandas.Data.Interfaces
+namespace Comandas.Services.Interfaces
 {
-    public interface IPedidoCozinhaRepository
+    public interface IPedidoCozinhasServices
     {
-        Task AddAsync(PedidoCozinha novoPedidoCozinha);
+        Task<PedidoCozinha> DeletePedidoCozinhaAsync(int v, int id);
         Task<PedidoCozinha> DeletePedidoCozinhaAsync(int id);
         Task<IEnumerable<PedidoCozinhaGetDto>> GetPedidoCozinhaAsync(int? situacaoID);
         Task<PedidoCozinha> GetPedidoCozinhaByIdAsync(int id);
-        Task PutPedidoCozinhaAsync(int situacaoId,int id);
+        Task PutPedidoCozinhaAsync(int situacaoId, int id);
     }
 }

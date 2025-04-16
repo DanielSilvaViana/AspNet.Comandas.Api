@@ -4,6 +4,7 @@ namespace Comandas.Shared.Dtos
 {
     public class CardapioCreateDto
     {
+        public int Id { get; set; }
         [StringLength(150)]
         public string Titulo { get; set; }
         [StringLength(300)]

@@ -6,12 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Comandas.Api.Data;
-using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Comandas.Services;
 using Comandas.Services.Interfaces;
 using Comandas.Domain.Models;
 using Swashbuckle.AspNetCore.Annotations;
+using Comandas.Shared.Exceptions;
+using Comandas.Shared.Dtos;
 
 namespace Comandas.Api.Controllers
 {
@@ -43,12 +44,7 @@ namespace Comandas.Api.Controllers
         [SwaggerResponse(500, "Erro interno do servidor, ao processar a requisição")]
         public async Task<ActionResult<IEnumerable<MesaDto>>> GetMesa()
         {
-            var mesa =  await _context.Mesas.Select(m => new MesaDto
-            {
-                Id = m.Id,
-                NumeroMesa = m.NumeroMesa,
-                SituacaoMesa = m.SituacaoMesa,                
-            }).ToListAsync();
+            var mesa = await _mesaServices.GetMesa();          
 
             return Ok(mesa);
         }
@@ -57,20 +53,18 @@ namespace Comandas.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<MesaDto>> GetMesa(int id)
         {
-            var mesa = await _context.Mesas.FindAsync(id);
-
-            if (mesa == null)
+            try
             {
-                return NotFound("Mesa Não encontrada!");
+                var mesa = await _mesaServices.GetMesaById(id);
+
+                return Ok(mesa);
             }
-
-            var retornoMesa =  new MesaDto
+            catch (NotFoundException ex)
             {
-                Id = mesa.Id,
-                NumeroMesa = mesa.NumeroMesa,
-                SituacaoMesa = mesa.SituacaoMesa                
-            };
-            return Ok(retornoMesa);
+
+                return NotFound(ex.Message);
+            }
+         
         }
 
         // PUT: api/Mesas/5
@@ -78,42 +72,18 @@ namespace Comandas.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMesa(int id, MesaUpdateDto mesadto)
         {
-            if (id != mesadto.Id)
-            {
-                return BadRequest();
-            }
-
-            //Consultar e Obter mesa via banco
-
-            var mesa = await _context.Mesas.FindAsync(id);
-
-            if(mesa == null)
-            {
-                return NotFound();
-            }
-
-            // Atribuir as propriedades das mesas no banco
-
-            mesa.NumeroMesa = mesadto.NumeroMesa;
-            mesa.SituacaoMesa = mesadto.SituacaoMesa;            
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _mesaServices.PutMesaAsync(mesadto, id);
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (BadRequestException ex)
             {
-                if (!MesaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
 
-            return NoContent();
+                return BadRequest(ex.Message);
+            }
+           
+
         }
 
         // POST: api/Mesas
@@ -121,30 +91,28 @@ namespace Comandas.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<MesaCreateDto>> PostMesa(MesaCreateDto mesaDto)
         {
-            var mesa = new Mesa
+            try
             {
-                NumeroMesa = mesaDto.NumeroMesa,
-                SituacaoMesa = mesaDto.SituacaoMesa
-            };
+                var mesa = await _mesaServices.PostMesaAsync(mesaDto);
 
-            _context.Mesas.Add(mesa);
-            await _context.SaveChangesAsync();
+                return CreatedAtAction("GetMesa", new { id = mesa.Id }, mesa);
+            }
+            catch (BadRequestException ex)
+            {
 
-            return CreatedAtAction("GetMesa", new { id = mesa.Id }, mesa);
+                return BadRequest(ex.Message);
+            }
+
+           
         }
 
         // DELETE: api/Mesas/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMesa(int id)
         {
-            var mesa = await _context.Mesas.FindAsync(id);
-            if (mesa == null)
-            {
-                return NotFound();
-            }
+            var mesa = await _mesaServices.DeleteMesa(id);
 
-            _context.Mesas.Remove(mesa);
-            await _context.SaveChangesAsync();
+          
 
             return NoContent();
         }

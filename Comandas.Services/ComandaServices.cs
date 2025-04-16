@@ -201,6 +201,49 @@ namespace Comandas.Services
             await _comandaRepository.SaveChangesAsync();
 
         }
+
+        public async Task DeleteComandaAsync(int id)
+        {
+            var comanda = _comandaRepository.GetByIdAsync(id).Result;
+            if (comanda == null)
+            {
+                throw new BadRequestException("Comanda Não Informada Inválida!");
+            }
+             _comandaRepository.RemoverComanda(comanda);
+            await _comandaRepository.SaveChangesAsync();
+
+        }
+
+        public async Task PatchComandaAsync(int id)
+        {
+            var consultaComanda = await _comandaRepository.GetByIdAsync(id);
+
+            if (consultaComanda == null)
+            {
+               throw new NotFoundException("Comanda Não Encontrada!");
+            }
+
+            //Alterar a Situação da Comanda
+
+            consultaComanda.SituacaoComanda = SITUACAO_COMANDA_ENCERRADA;
+
+            //Liberar a Mesa
+
+            var mesa = await _mesaRepository.GetMesaAsync(consultaComanda.NumeroMesa);
+
+            if (mesa == null)
+            {
+                throw new NotFoundException("Mesa Não Encontrada!");
+            }
+
+            mesa.SituacaoMesa = SITUACAO_MESA_DISPONIVEL;
+
+            // Salvar as Alterações no banco
+
+            await _comandaRepository.SaveChangesAsync();            
+            
+            
+        }
     }
 }
 

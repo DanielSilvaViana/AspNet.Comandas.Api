@@ -17,7 +17,6 @@ namespace Comandas.Api.Controllers
 
     public class ComandaController : ControllerBase
     {
-        private readonly AppDbContext _context;
         private readonly IComandaServices _comandaServices;
         private const int SITUACAO_ABERTA = 1;
         private const int SITUACAO_MESA_OCUPADA = 1;
@@ -27,9 +26,9 @@ namespace Comandas.Api.Controllers
 
 
         private readonly ILogger<ComandaController> _logger;
-        public ComandaController(AppDbContext context, IComandaServices comandaServices, ILogger<ComandaController> logger)
+        public ComandaController(
+            IComandaServices comandaServices, ILogger<ComandaController> logger)
         {
-            _context = context;
             _comandaServices = comandaServices;
             _logger = logger;
         }
@@ -56,12 +55,12 @@ namespace Comandas.Api.Controllers
 
                 return NotFound(ex.Message);
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Erro Interno não tratado", ex);
-                return StatusCode(500,"Erro Interno no Servidor!");
+                return StatusCode(500, "Erro Interno no Servidor!");
             }
-            
+
         }
 
         [HttpPost]
@@ -100,23 +99,28 @@ namespace Comandas.Api.Controllers
                 return BadRequest(ex.Message);
             }
 
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex,ex.Message);
-                return StatusCode(500,"Erro Interno do Servidor!");
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500, "Erro Interno do Servidor!");
             }
 
-            
+
 
         }
         [HttpDelete("{id}")]
-        public IActionResult DeleteComanda(string id)
+        public async Task<IActionResult> DeleteComanda(int id)
         {
-            var comanda = _context.Comandas.Find(id);
-            if (comanda == null) return NotFound();
+            try
+            {
+                await _comandaServices.DeleteComandaAsync(id);
+            }
+            catch (NotFoundException ex)
+            {
 
-            _context.Comandas.Remove(comanda);
-            _context.SaveChanges();
+                return NotFound(ex.Message);
+            }
+
 
             return NoContent();
         }
@@ -125,34 +129,18 @@ namespace Comandas.Api.Controllers
 
         public async Task<ActionResult> PatchComanda(int id)
         {
-            //Consultar a Comanda
-            var consultaComanda = await _context.Comandas.FirstOrDefaultAsync(comanda => comanda.Id == id);
-
-            if (consultaComanda == null)
+            try
             {
-                return NotFound("Comanda Não Encontrada!");
+                await _comandaServices.PatchComandaAsync(id);
+            }
+            catch (NotFoundException ex)
+            {
+
+                return NotFound(ex.Message);
             }
 
-            //Alterar a Situação da Comanda
-
-            consultaComanda.SituacaoComanda = SITUACAO_COMANDA_ENCERRADA;
-
-            //Liberar a Mesa
-            var mesa = await _context.Mesas.FirstOrDefaultAsync(mesa => mesa.NumeroMesa == consultaComanda.NumeroMesa);
-
-            if (mesa == null)
-            {
-                return NotFound("Mesa Não Encontrada!");
-            }
-
-            mesa.SituacaoMesa = SITUACAO_MESA_DISPONIVEL;
-
-            // Salvar as Alterações no banco
-
-            await _context.SaveChangesAsync();
-
-            //Retornar um NonContent
             return NoContent();
+
         }
     }
 
