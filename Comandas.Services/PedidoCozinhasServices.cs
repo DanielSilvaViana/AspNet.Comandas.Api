@@ -1,4 +1,5 @@
 ﻿using Comandas.Data.Interfaces;
+using Comandas.Data.Repository;
 using Comandas.Domain.Models;
 using Comandas.Services.Interfaces;
 using Comandas.Shared.Dtos;
@@ -15,10 +16,12 @@ namespace Comandas.Services
     public class PedidoCozinhasServices : IPedidoCozinhasServices
     {
         private readonly IPedidoCozinhaRepository _pedidoCozinhaRepository;
+        private readonly IRedisService _redisService;
 
-        public PedidoCozinhasServices(IPedidoCozinhaRepository pedidoCozinhaRepository)
+        public PedidoCozinhasServices(IPedidoCozinhaRepository pedidoCozinhaRepository, IRedisService redisService)
         {
             _pedidoCozinhaRepository = pedidoCozinhaRepository;
+            _redisService = redisService;
         }
 
         public Task<PedidoCozinha> DeletePedidoCozinhaAsync(int v, int id)
@@ -34,16 +37,32 @@ namespace Comandas.Services
 
         public async Task<IEnumerable<PedidoCozinhaGetDto>> GetPedidoCozinhaAsync(int? situacaoID)
         {
-            return await _pedidoCozinhaRepository.GetPedidoCozinhaAsync(situacaoID);
+            var key = $"pedidoCozinhaAll";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                return await _redisService.GetAsync<List<PedidoCozinhaGetDto>>(key);
+            }
+            var pedidoCozinhas = await _pedidoCozinhaRepository.GetPedidoCozinhaAsync(situacaoID);
+            await _redisService.SetAsync(key, pedidoCozinhas, TimeSpan.FromMinutes(60));
+
+            return pedidoCozinhas;
         }
 
         public async Task<PedidoCozinha> GetPedidoCozinhaByIdAsync(int id)
         {
+
+            var key = $"pedidoCozinha:{id}";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                return await _redisService.GetAsync<PedidoCozinha>(key);
+            }
+           
             var pedidoCozinha = await _pedidoCozinhaRepository.GetPedidoCozinhaByIdAsync(id);
+            await _redisService.SetAsync(key, pedidoCozinha, TimeSpan.FromMinutes(60));
 
             return pedidoCozinha;
-
-
         }
 
         public async Task PutPedidoCozinhaAsync(int situacaoId, int id)

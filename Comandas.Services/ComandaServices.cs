@@ -1,4 +1,5 @@
 ﻿using Comandas.Data.Interfaces;
+using Comandas.Data.Repository;
 using Comandas.Domain.Models;
 using Comandas.Services.Interfaces;
 using Comandas.Shared.Dtos;
@@ -20,6 +21,8 @@ namespace Comandas.Services
         private readonly ICardapioItemRepository _cardapioItemRepository;
         private readonly IPedidoCozinhaRepository _pedidoRepository;
         private readonly IPedidoCozinhaItemRepository _pedidoCozinhaItemRepository;
+        private readonly IRedisService _redisService;
+
 
         private const int SITUACAO_ABERTA = 1;
         private const int SITUACAO_MESA_OCUPADA = 1;
@@ -28,7 +31,7 @@ namespace Comandas.Services
         private const int SITUACAO_COMANDA_ENCERRADA = 2;
 
 
-        public ComandaServices(IComandaRepository comandaRepository, IComandaItemRepository comandaItemRepository, IMesaRepository mesaRepository, ICardapioItemRepository cardapioItemRepository, IPedidoCozinhaRepository pedidoRepository, IPedidoCozinhaItemRepository pedidoCozinhaItemRepository)
+        public ComandaServices(IComandaRepository comandaRepository, IComandaItemRepository comandaItemRepository, IMesaRepository mesaRepository, ICardapioItemRepository cardapioItemRepository, IPedidoCozinhaRepository pedidoRepository, IPedidoCozinhaItemRepository pedidoCozinhaItemRepository, IRedisService redisService)
         {
             _comandaRepository = comandaRepository;
             _comandaItemRepository = comandaItemRepository;
@@ -36,18 +39,38 @@ namespace Comandas.Services
             _cardapioItemRepository = cardapioItemRepository;
             _pedidoRepository = pedidoRepository;
             _pedidoCozinhaItemRepository = pedidoCozinhaItemRepository;
+            _redisService = redisService;
         }
 
         public async Task<ComandaGetDto> GetComandaAsync(int id)
         {
+
+            var key = $"comanda:{id}";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                return await _redisService.GetAsync<ComandaGetDto>(key);
+            }
+
             var comanda = await _comandaRepository.GetComandaAsync(id);
+            await _redisService.SetAsync(key, comanda, TimeSpan.FromMinutes(60));
 
             return comanda;
         }
 
         public async Task<IEnumerable<ComandaGetDto>> GetComandas()
         {
-            return await _comandaRepository.GetComandas();
+            var key = $"comandasAll";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                return await _redisService.GetAsync<List<ComandaGetDto>>(key);
+            }
+            var comandas = await _comandaRepository.GetComandas();
+            await _redisService.SetAsync(key, comandas, TimeSpan.FromMinutes(60));
+
+            return comandas;
+
         }
 
         public async Task<ComandaCreateDto> PostComandaAsync(ComandaDto comandadto)

@@ -4,6 +4,10 @@ using Comandas.Data.Interfaces;
 using Comandas.Data.Repository;
 using Comandas.Services;
 using Comandas.Services.Interfaces;
+using Comandas.Shared.Dtos;
+using Comandas.Shared.Validators;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -60,8 +64,12 @@ builder.Services.AddScoped<IPedidoCozinhaItemRepository, PedidoCozinhaItemReposi
 builder.Services.AddScoped<IPedidoCozinhaRepository, PedidoCozinhaRepository>();
 builder.Services.AddScoped<ICardapioItemRepository, CardapioItemRepository>();
 builder.Services.AddScoped<IComandaItemRepository, ComandaItemRepository>();
+builder.Services.AddScoped<ICardapioItemServices, CardapioItemServices>();
 builder.Services.AddScoped<IMesaRepository, MesaRepository>();
 builder.Services.AddScoped<IRedisService, RedisService>();
+builder.Services.AddValidatorsFromAssemblyContaining<MesaCreateDTOValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CardapioItemCreateDTOValidator>();
+builder.Services.AddFluentValidationAutoValidation();
 
 
 

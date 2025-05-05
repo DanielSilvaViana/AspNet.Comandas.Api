@@ -4,6 +4,7 @@ using Comandas.Services.Interfaces;
 using Comandas.Shared.Dtos;
 using Comandas.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 
 namespace Comandas.Services
@@ -26,13 +27,29 @@ namespace Comandas.Services
 
         public async Task<Mesa> DeleteMesa(int id)
         {
+            var key = $"mesaAll";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                await _redisService.RemoveAsync(key);
+            }
+
             var mesa = await _mesaRepository.DeleteMesaAsync(id);
             return mesa;
         }
 
         public async Task<IEnumerable<MesaDto>> GetMesa()
         {
-            return await _mesaRepository.GetMesa();
+            var key = $"mesaAll";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                return await _redisService.GetAsync<List<MesaDto>>(key);
+            }
+            var mesas = await _mesaRepository.GetMesa();
+            await _redisService.SetAsync(key, mesas, TimeSpan.FromMinutes(60));
+
+            return mesas;
 
         }
 
@@ -53,6 +70,13 @@ namespace Comandas.Services
 
         public async Task<Mesa> PostMesaAsync(MesaCreateDto mesaDto)
         {
+            var key = $"mesaAll";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                 await _redisService.RemoveAsync(key);
+            }
+
             var mesa = await _mesaRepository.PostMesaAsync(mesaDto);
             return mesa;
 
@@ -61,14 +85,17 @@ namespace Comandas.Services
 
         public async Task PutMesaAsync(MesaUpdateDto mesadto, int id)
         {
+            var key = $"mesaAll";
+            var keyExists = await _redisService.KeyExistsAsync(key);
+            if (keyExists)
+            {
+                await _redisService.RemoveAsync(key);
+            }
+
             await _mesaRepository.PutMesaAsync(mesadto, id);
 
 
         }
-
-        Task<Mesa> IMesaServices.PostMesaAsync(MesaCreateDto mesaDto)
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }
